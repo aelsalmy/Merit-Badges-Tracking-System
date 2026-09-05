@@ -78,6 +78,20 @@ function doGet(e) {
       return jsonResponse(result);
     }
 
+    case 'getDashboardData': {
+      var allMembers = sheetToObjects(getSheet('members'));
+      var badges = sheetToObjects(getSheet('badges'));
+      var requirements = sheetToObjects(getSheet('requirements'));
+      requirements.sort(function(a, b) { return a.sort_order - b.sort_order; });
+      var allProgress = sheetToObjects(getSheet('progress'));
+      return jsonResponse({
+        members: allMembers,
+        badges: badges,
+        requirements: requirements,
+        progress: allProgress
+      });
+    }
+
     case 'getTeamData': {
       var team = e.parameter.team;
       if (!team) return errorResponse('team is required');
@@ -164,6 +178,52 @@ function doPost(e) {
       var newId = 'M' + String(maxNum + 1).padStart(3, '0');
       memberSheet.appendRow([newId, fullName, memberTeam]);
       return jsonResponse({ member_id: newId, full_name: fullName, team: memberTeam });
+    }
+
+    case 'addBadge': {
+      var badgeName = body.badge_name;
+      var badgeDesc = body.description || '';
+      var reqs = body.requirements || [];
+      if (!badgeName) {
+        return errorResponse('badge_name is required');
+      }
+
+      var badgeSheet = getSheet('badges');
+      var badgeData = badgeSheet.getDataRange().getValues();
+      var maxBadgeNum = 0;
+      for (var b = 1; b < badgeData.length; b++) {
+        var bid = String(badgeData[b][0]);
+        if (bid.charAt(0) === 'B') {
+          var bnum = parseInt(bid.substring(1), 10);
+          if (bnum > maxBadgeNum) maxBadgeNum = bnum;
+        }
+      }
+      var newBadgeId = 'B' + String(maxBadgeNum + 1).padStart(3, '0');
+      badgeSheet.appendRow([newBadgeId, badgeName, badgeDesc]);
+
+      var reqSheet = getSheet('requirements');
+      var reqData = reqSheet.getDataRange().getValues();
+      var maxReqNum = 0;
+      for (var r = 1; r < reqData.length; r++) {
+        var rid = String(reqData[r][0]);
+        if (rid.charAt(0) === 'R') {
+          var rnum = parseInt(rid.substring(1), 10);
+          if (rnum > maxReqNum) maxReqNum = rnum;
+        }
+      }
+
+      var createdReqs = [];
+      for (var k = 0; k < reqs.length; k++) {
+        var reqNum = maxReqNum + k + 1;
+        var newReqId = 'R' + String(reqNum).padStart(3, '0');
+        reqSheet.appendRow([newReqId, newBadgeId, reqs[k], k + 1]);
+        createdReqs.push({ requirement_id: newReqId, badge_id: newBadgeId, requirement_text: reqs[k], sort_order: k + 1 });
+      }
+
+      return jsonResponse({
+        badge: { badge_id: newBadgeId, badge_name: badgeName, description: badgeDesc },
+        requirements: createdReqs
+      });
     }
 
     default:

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { fetchAllData, fetchProgress, markRequirement } from './api/sheets';
 import MemberSelector from './components/MemberSelector';
-import NavBar from './components/NavBar';
 import Loader from './components/Loader';
 import HomePage from './pages/HomePage';
 import BadgePage from './pages/BadgePage';
 import TeamPage from './pages/TeamPage';
+import CreateBadgePage from './pages/CreateBadgePage';
+import DashboardPage from './pages/DashboardPage';
 import './App.css';
 
 function getStored(key, fallback = '') {
@@ -19,7 +20,7 @@ function setStored(key, value) {
 
 function AppContent() {
   const location = useLocation();
-  const isTeamView = location.pathname.startsWith('/team');
+  const isScoutView = location.pathname === '/' || location.pathname.startsWith('/badge/');
 
   const [members, setMembers] = useState([]);
   const [badges, setBadges] = useState([]);
@@ -29,6 +30,7 @@ function AppContent() {
   const [markedBy, setMarkedBy] = useState(() => getStored('markedBy'));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadData = useCallback(async (mid) => {
     setLoading(true);
@@ -47,10 +49,10 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (!isTeamView) {
+    if (isScoutView) {
       loadData(memberId);
     }
-  }, [memberId, isTeamView, loadData]);
+  }, [memberId, isScoutView, loadData]);
 
   function handleMemberChange(id) {
     setMemberId(id);
@@ -97,31 +99,60 @@ function AppContent() {
   }
 
   return (
-    <div className="app">
-      <header className="top-bar">
-        <div className="top-bar-field">
-          <label htmlFor="leader-name">Leader</label>
-          <input
-            id="leader-name"
-            type="text"
-            placeholder="Your name"
-            value={markedBy}
-            onChange={(e) => handleMarkedByChange(e.target.value)}
-          />
+    <div className="app-layout">
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Badge Tracker</h1>
         </div>
-        {!isTeamView && (
-          <div className="top-bar-field">
-            <label htmlFor="member-select">Scout</label>
-            <MemberSelector
-              members={members}
-              selectedId={memberId}
-              onChange={handleMemberChange}
+
+        <nav className="sidebar-nav">
+          <NavLink to="/" end className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'} onClick={() => setSidebarOpen(false)}>
+            Scout View
+          </NavLink>
+          <NavLink to="/team" className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'} onClick={() => setSidebarOpen(false)}>
+            Team View
+          </NavLink>
+          <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'} onClick={() => setSidebarOpen(false)}>
+            Dashboard
+          </NavLink>
+          <NavLink to="/create-badge" className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'} onClick={() => setSidebarOpen(false)}>
+            Create Badge
+          </NavLink>
+        </nav>
+
+        <div className="sidebar-fields">
+          <div className="sidebar-field">
+            <label htmlFor="leader-name">Leader</label>
+            <input
+              id="leader-name"
+              type="text"
+              placeholder="Your name"
+              value={markedBy}
+              onChange={(e) => handleMarkedByChange(e.target.value)}
             />
           </div>
-        )}
-      </header>
+          {isScoutView && (
+            <div className="sidebar-field">
+              <label htmlFor="member-select">Scout</label>
+              <MemberSelector
+                members={members}
+                selectedId={memberId}
+                onChange={handleMemberChange}
+              />
+            </div>
+          )}
+        </div>
+      </aside>
 
-      <NavBar />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <main className="main-content">
         <Routes>
@@ -136,7 +167,7 @@ function AppContent() {
                   <button onClick={() => loadData(memberId)}>Retry</button>
                 </div>
               ) : !memberId ? (
-                <p className="empty-state">Select a scout to view their badge progress.</p>
+                <p className="empty-state">Select a scout from the sidebar to view their badge progress.</p>
               ) : (
                 <HomePage
                   badges={badges}
@@ -162,6 +193,14 @@ function AppContent() {
           <Route
             path="/team"
             element={<TeamPage markedBy={markedBy} />}
+          />
+          <Route
+            path="/dashboard"
+            element={<DashboardPage />}
+          />
+          <Route
+            path="/create-badge"
+            element={<CreateBadgePage />}
           />
         </Routes>
       </main>

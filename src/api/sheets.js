@@ -161,3 +161,50 @@ export async function addMember({ fullName, team }) {
     xhr.send(JSON.stringify({ action: 'addMember', full_name: fullName, team }));
   });
 }
+
+export async function fetchDashboardData() {
+  if (useMock()) {
+    return {
+      members: mockMembers,
+      badges: MOCK_DATA.badges,
+      requirements: MOCK_DATA.requirements,
+      progress: mockProgress,
+    };
+  }
+  return request({ action: 'getDashboardData' });
+}
+
+export async function createBadge({ badgeName, description, requirements }) {
+  if (useMock()) {
+    const nums = MOCK_DATA.badges.map((b) => parseInt(b.badge_id.substring(1), 10));
+    const nextB = Math.max(0, ...nums) + 1;
+    const badgeId = 'B' + String(nextB).padStart(3, '0');
+    const badge = { badge_id: badgeId, badge_name: badgeName, description };
+    MOCK_DATA.badges.push(badge);
+
+    const reqNums = MOCK_DATA.requirements.map((r) => parseInt(r.requirement_id.substring(1), 10));
+    let nextR = Math.max(0, ...reqNums) + 1;
+    const createdReqs = requirements.map((text, i) => {
+      const req = { requirement_id: 'R' + String(nextR + i).padStart(3, '0'), badge_id: badgeId, requirement_text: text, sort_order: i + 1 };
+      MOCK_DATA.requirements.push(req);
+      return req;
+    });
+    return { badge, requirements: createdReqs };
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL);
+    xhr.onload = function () {
+      try {
+        const json = JSON.parse(xhr.responseText);
+        if (!json.success) return reject(new Error(json.error || 'Request failed'));
+        resolve(json.data);
+      } catch {
+        reject(new Error('Invalid response'));
+      }
+    };
+    xhr.onerror = function () { reject(new Error('Network error')); };
+    xhr.send(JSON.stringify({ action: 'addBadge', badge_name: badgeName, description, requirements }));
+  });
+}
