@@ -78,6 +78,26 @@ function doGet(e) {
       return jsonResponse(result);
     }
 
+    case 'getTeamData': {
+      var team = e.parameter.team;
+      if (!team) return errorResponse('team is required');
+      var allMembers = sheetToObjects(getSheet('members'));
+      var teamMembers = allMembers.filter(function(m) { return m.team === team; });
+      var badges = sheetToObjects(getSheet('badges'));
+      var requirements = sheetToObjects(getSheet('requirements'));
+      requirements.sort(function(a, b) { return a.sort_order - b.sort_order; });
+      var memberIds = {};
+      teamMembers.forEach(function(m) { memberIds[m.member_id] = true; });
+      var allProgress = sheetToObjects(getSheet('progress'));
+      var teamProgress = allProgress.filter(function(p) { return memberIds[p.member_id]; });
+      return jsonResponse({
+        members: teamMembers,
+        badges: badges,
+        requirements: requirements,
+        progress: teamProgress
+      });
+    }
+
     default:
       return errorResponse('Unknown action: ' + action);
   }
@@ -123,6 +143,27 @@ function doPost(e) {
         date_completed: dateStr,
         marked_by: markedBy
       });
+    }
+
+    case 'addMember': {
+      var fullName = body.full_name;
+      var memberTeam = body.team;
+      if (!fullName || !memberTeam) {
+        return errorResponse('full_name and team are required');
+      }
+      var memberSheet = getSheet('members');
+      var memberData = memberSheet.getDataRange().getValues();
+      var maxNum = 0;
+      for (var j = 1; j < memberData.length; j++) {
+        var id = String(memberData[j][0]);
+        if (id.charAt(0) === 'M') {
+          var num = parseInt(id.substring(1), 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+      var newId = 'M' + String(maxNum + 1).padStart(3, '0');
+      memberSheet.appendRow([newId, fullName, memberTeam]);
+      return jsonResponse({ member_id: newId, full_name: fullName, team: memberTeam });
     }
 
     default:

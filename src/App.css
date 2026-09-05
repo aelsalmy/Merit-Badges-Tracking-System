@@ -329,6 +329,236 @@
   to { transform: rotate(360deg); }
 }
 
+/* Nav Bar */
+
+.nav-bar {
+  display: flex;
+  gap: 0;
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.nav-link {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.nav-link:hover {
+  color: var(--color-text);
+}
+
+.nav-link.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Team View */
+
+.team-page {
+  max-width: 100%;
+}
+
+.team-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.team-selector,
+.badge-selector {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Team Table */
+
+.team-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  font-size: 14px;
+}
+
+.team-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: #f5f7f5;
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.team-table tbody tr:hover {
+  background: #f0f4f0;
+}
+
+.team-table .earned-row {
+  background: var(--color-earned-bg);
+}
+
+.team-table .earned-row:hover {
+  background: #fff3cd;
+}
+
+.member-name {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.checkbox-cell {
+  text-align: center;
+}
+
+.checkbox-cell input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.status-cell {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.status-cell.earned {
+  color: var(--color-accent);
+}
+
+.empty-cell {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 24px;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+thead .sticky-col {
+  background: #f5f7f5;
+}
+
+/* Add Member Form */
+
+.add-member-btn {
+  padding: 6px 14px;
+  border: 1px dashed var(--color-primary);
+  background: transparent;
+  color: var(--color-primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-end;
+}
+
+.add-member-btn:hover {
+  background: rgba(44, 95, 45, 0.05);
+}
+
+.add-member-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #f5f7f5;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+
+.add-member-form input[type='text'],
+.add-member-form select {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.add-member-form button[type='submit'] {
+  padding: 6px 16px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.add-member-form button[type='submit']:hover {
+  background: var(--color-primary-light);
+}
+
+.add-member-form button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.cancel-btn:hover {
+  color: var(--color-text);
+}
+
+.form-error {
+  color: #c0392b;
+  font-size: 13px;
+}
+
 /* Responsive */
 
 @media (max-width: 600px) {
@@ -340,5 +570,13 @@
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
+  }
+  .team-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .add-member-form {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

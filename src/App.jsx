@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { fetchAllData, fetchProgress, markRequirement } from './api/sheets';
 import MemberSelector from './components/MemberSelector';
+import NavBar from './components/NavBar';
 import Loader from './components/Loader';
 import HomePage from './pages/HomePage';
 import BadgePage from './pages/BadgePage';
+import TeamPage from './pages/TeamPage';
 import './App.css';
 
 function getStored(key, fallback = '') {
@@ -15,14 +17,17 @@ function setStored(key, value) {
   try { localStorage.setItem(key, value); } catch {}
 }
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+  const isTeamView = location.pathname.startsWith('/team');
+
   const [members, setMembers] = useState([]);
   const [badges, setBadges] = useState([]);
   const [requirements, setRequirements] = useState([]);
   const [progress, setProgress] = useState([]);
   const [memberId, setMemberId] = useState(() => getStored('memberId'));
   const [markedBy, setMarkedBy] = useState(() => getStored('markedBy'));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadData = useCallback(async (mid) => {
@@ -42,8 +47,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    loadData(memberId);
-  }, [memberId, loadData]);
+    if (!isTeamView) {
+      loadData(memberId);
+    }
+  }, [memberId, isTeamView, loadData]);
 
   function handleMemberChange(id) {
     setMemberId(id);
@@ -90,19 +97,19 @@ export default function App() {
   }
 
   return (
-    <HashRouter>
-      <div className="app">
-        <header className="top-bar">
-          <div className="top-bar-field">
-            <label htmlFor="leader-name">Leader</label>
-            <input
-              id="leader-name"
-              type="text"
-              placeholder="Your name"
-              value={markedBy}
-              onChange={(e) => handleMarkedByChange(e.target.value)}
-            />
-          </div>
+    <div className="app">
+      <header className="top-bar">
+        <div className="top-bar-field">
+          <label htmlFor="leader-name">Leader</label>
+          <input
+            id="leader-name"
+            type="text"
+            placeholder="Your name"
+            value={markedBy}
+            onChange={(e) => handleMarkedByChange(e.target.value)}
+          />
+        </div>
+        {!isTeamView && (
           <div className="top-bar-field">
             <label htmlFor="member-select">Scout</label>
             <MemberSelector
@@ -111,47 +118,61 @@ export default function App() {
               onChange={handleMemberChange}
             />
           </div>
-        </header>
+        )}
+      </header>
 
-        <main className="main-content">
-          {loading ? (
-            <Loader />
-          ) : error ? (
-            <div className="error-state">
-              <p>Failed to load data: {error}</p>
-              <button onClick={() => loadData(memberId)}>Retry</button>
-            </div>
-          ) : !memberId ? (
-            <p className="empty-state">Select a scout to view their badge progress.</p>
-          ) : (
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <HomePage
-                    badges={badges}
-                    requirements={requirements}
-                    progress={progress}
-                  />
-                }
+      <NavBar />
+
+      <main className="main-content">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              loading ? (
+                <Loader />
+              ) : error ? (
+                <div className="error-state">
+                  <p>Failed to load data: {error}</p>
+                  <button onClick={() => loadData(memberId)}>Retry</button>
+                </div>
+              ) : !memberId ? (
+                <p className="empty-state">Select a scout to view their badge progress.</p>
+              ) : (
+                <HomePage
+                  badges={badges}
+                  requirements={requirements}
+                  progress={progress}
+                />
+              )
+            }
+          />
+          <Route
+            path="/badge/:badgeId"
+            element={
+              <BadgePage
+                badges={badges}
+                requirements={requirements}
+                progress={progress}
+                onToggle={handleToggle}
+                markedBy={markedBy}
+                memberId={memberId}
               />
-              <Route
-                path="/badge/:badgeId"
-                element={
-                  <BadgePage
-                    badges={badges}
-                    requirements={requirements}
-                    progress={progress}
-                    onToggle={handleToggle}
-                    markedBy={markedBy}
-                    memberId={memberId}
-                  />
-                }
-              />
-            </Routes>
-          )}
-        </main>
-      </div>
+            }
+          />
+          <Route
+            path="/team"
+            element={<TeamPage markedBy={markedBy} />}
+          />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <HashRouter>
+      <AppContent />
     </HashRouter>
   );
 }

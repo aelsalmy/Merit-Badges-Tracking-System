@@ -21,6 +21,7 @@ const MOCK_DATA = {
 };
 
 let mockProgress = [];
+let mockMembers = [...MOCK_DATA.members];
 
 function useMock() {
   return !API_URL;
@@ -114,5 +115,49 @@ export async function markRequirement({ memberId, requirementId, completed, mark
       completed,
       marked_by: markedBy,
     }));
+  });
+}
+
+export async function fetchTeamData(team) {
+  if (useMock()) {
+    const members = mockMembers.filter((m) => m.team === team);
+    const memberIds = new Set(members.map((m) => m.member_id));
+    return {
+      members,
+      badges: MOCK_DATA.badges,
+      requirements: MOCK_DATA.requirements,
+      progress: mockProgress.filter((p) => memberIds.has(p.member_id)),
+    };
+  }
+  return request({ action: 'getTeamData', team });
+}
+
+export async function addMember({ fullName, team }) {
+  if (useMock()) {
+    const nums = mockMembers.map((m) => parseInt(m.member_id.substring(1), 10));
+    const next = Math.max(0, ...nums) + 1;
+    const member = {
+      member_id: 'M' + String(next).padStart(3, '0'),
+      full_name: fullName,
+      team,
+    };
+    mockMembers.push(member);
+    return member;
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL);
+    xhr.onload = function () {
+      try {
+        const json = JSON.parse(xhr.responseText);
+        if (!json.success) return reject(new Error(json.error || 'Request failed'));
+        resolve(json.data);
+      } catch {
+        reject(new Error('Invalid response'));
+      }
+    };
+    xhr.onerror = function () { reject(new Error('Network error')); };
+    xhr.send(JSON.stringify({ action: 'addMember', full_name: fullName, team }));
   });
 }
