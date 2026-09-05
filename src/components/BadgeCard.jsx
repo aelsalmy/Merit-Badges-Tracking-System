@@ -5,7 +5,7 @@ export default function BadgeCard({ badge, requirements, progress }) {
   const badgeReqs = requirements.filter((r) => r.badge_id === badge.badge_id);
   const total = badgeReqs.length;
   const completed = badgeReqs.filter((r) =>
-    progress.some((p) => p.requirement_id === r.requirement_id && String(p.completed) === 'TRUE')
+    progress.some((p) => p.requirement_id === r.requirement_id && String(p.completed).toUpperCase() === 'TRUE')
   ).length;
 
   const earned = total > 0 && completed === total;

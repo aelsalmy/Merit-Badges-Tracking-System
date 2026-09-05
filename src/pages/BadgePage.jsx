@@ -20,7 +20,7 @@ export default function BadgePage({ badges, requirements, progress, onToggle, ma
   }
 
   const completed = badgeReqs.filter((r) =>
-    progress.some((p) => p.requirement_id === r.requirement_id && String(p.completed) === 'TRUE')
+    progress.some((p) => p.requirement_id === r.requirement_id && String(p.completed).toUpperCase() === 'TRUE')
   ).length;
   const total = badgeReqs.length;
   const earned = total > 0 && completed === total;

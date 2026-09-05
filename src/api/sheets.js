@@ -31,10 +31,21 @@ async function request(params) {
   Object.entries(params).forEach(([key, val]) => {
     if (val != null) url.searchParams.set(key, val);
   });
-  const res = await fetch(url.toString());
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Request failed');
-  return json.data;
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url.toString());
+    xhr.onload = function () {
+      try {
+        const json = JSON.parse(xhr.responseText);
+        if (!json.success) return reject(new Error(json.error || 'Request failed'));
+        resolve(json.data);
+      } catch {
+        reject(new Error('Invalid response'));
+      }
+    };
+    xhr.onerror = function () { reject(new Error('Network error')); };
+    xhr.send();
+  });
 }
 
 export async function fetchAllData(memberId) {
@@ -83,18 +94,25 @@ export async function markRequirement({ memberId, requirementId, completed, mark
     return entry;
   }
 
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL);
+    xhr.onload = function () {
+      try {
+        const json = JSON.parse(xhr.responseText);
+        if (!json.success) return reject(new Error(json.error || 'Request failed'));
+        resolve(json.data);
+      } catch {
+        reject(new Error('Invalid response'));
+      }
+    };
+    xhr.onerror = function () { reject(new Error('Network error')); };
+    xhr.send(JSON.stringify({
       action: 'markRequirement',
       member_id: memberId,
       requirement_id: requirementId,
       completed,
       marked_by: markedBy,
-    }),
+    }));
   });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Request failed');
-  return json.data;
 }

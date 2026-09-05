@@ -1,5 +1,5 @@
 export default function RequirementRow({ requirement, progressEntry, onToggle, disabled }) {
-  const isCompleted = progressEntry && String(progressEntry.completed) === 'TRUE';
+  const isCompleted = progressEntry && String(progressEntry.completed).toUpperCase() === 'TRUE';
 
   return (
     <label className={`requirement-row ${isCompleted ? 'completed' : ''}`}>
