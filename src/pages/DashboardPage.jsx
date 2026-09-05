@@ -38,25 +38,25 @@ export default function DashboardPage() {
       const teamMembers = members.filter((m) => m.team === team);
       const memberIds = new Set(teamMembers.map((m) => m.member_id));
 
-      let totalEarned = 0;
+      let badgesWithPass = 0;
       badges.forEach((badge) => {
         const badgeReqs = requirements.filter((r) => r.badge_id === badge.badge_id);
         if (badgeReqs.length === 0) return;
-        teamMembers.forEach((member) => {
-          const allDone = badgeReqs.every((req) => {
+        const anyMemberEarned = teamMembers.some((member) =>
+          badgeReqs.every((req) => {
             const p = progress.find(
               (pr) => pr.member_id === member.member_id && pr.requirement_id === req.requirement_id
             );
             return p && String(p.completed).toUpperCase() === 'TRUE';
-          });
-          if (allDone) totalEarned++;
-        });
+          })
+        );
+        if (anyMemberEarned) badgesWithPass++;
       });
 
       return {
         team,
         memberCount: teamMembers.length,
-        totalEarned,
+        badgesWithPass,
       };
     });
   }, [members, badges, requirements, progress]);
@@ -101,7 +101,7 @@ export default function DashboardPage() {
       <h2>Dashboard</h2>
 
       <div className="dashboard-grid">
-        {teamSummary.map(({ team, memberCount, totalEarned }) => (
+        {teamSummary.map(({ team, memberCount, badgesWithPass }) => (
           <div
             key={team}
             className={`dashboard-card ${selectedTeam === team ? 'selected' : ''}`}
@@ -114,8 +114,8 @@ export default function DashboardPage() {
                 <span className="stat-label">Scouts</span>
               </div>
               <div className="dashboard-stat">
-                <span className="stat-value">{totalEarned}</span>
-                <span className="stat-label">Badges Earned</span>
+                <span className="stat-value">{badgesWithPass}</span>
+                <span className="stat-label">Badges Passed</span>
               </div>
             </div>
           </div>
